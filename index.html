@@ -1,35 +1,429 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NowpawoN - Menu & Pemesanan</title>
+  <title>NowpawoN - Daftar Menu & Pemesanan</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --orange: #d35400;
+      --orange-light: #f39c12;
+      --dark: #2c3e50;
+      --cream: #fffaf4;
+      --gray: #666;
+      --green: #27ae60;
+      --border: #ebd9c8;
     }
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #fffaf4;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, "Segoe UI", sans-serif; background: var(--cream); color: #333; padding-bottom: 110px; }
+    
+    header {
+      min-height: 280px;
+      padding: 30px 15px;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; color: white;
+      background: linear-gradient(rgba(0,0,0,.65), rgba(211,84,0,.30)),
+                  url("https://lh3.googleusercontent.com/d/19_O6Z3nywqw40Jy4Xpo77mT_XcQguEMd") center / cover;
     }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
+    .brand-logo-wrap { margin-bottom: 12px; display: inline-block; }
+    .brand-logo-img {
+      width: 95px; height: 95px; object-fit: cover;
+      border-radius: 50%; border: 3px solid #ffd08a;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35); background: white;
     }
+    header h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); letter-spacing: 3px; line-height: 1.1; }
+    header p { margin-top: 8px; color: #ffd08a; font-size: 1.1rem; font-style: italic; }
+
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+    .status { background: white; padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.05); margin-bottom: 20px; color: var(--gray); font-size: 0.9rem; }
+    .status.error { color: #a93226; border-left: 5px solid #c0392b; }
+
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; background: white; padding: 14px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,.06); margin-bottom: 25px; }
+    .search { flex: 1; min-width: 220px; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; outline: none; }
+    .cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .cat { border: none; padding: 10px 18px; border-radius: 25px; cursor: pointer; background: #eee; white-space: nowrap; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
+    .cat.active { background: var(--orange); color: white; }
+
+    .title { text-align: left; color: var(--dark); margin: 30px 0 16px; font-size: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 24px; }
+    .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,.08); transition: .25s; display: flex; flex-direction: column; justify-content: space-between; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,.12); }
+    .photo { height: 190px; position: relative; background: #ebd9c8; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .photo img { width: 100%; height: 100%; object-fit: cover; }
+    .badge { position: absolute; left: 12px; top: 12px; background: var(--green); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    
+    .info { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .name { font-weight: bold; font-size: 1.1rem; color: var(--dark); line-height: 1.3; }
+    .price { font-weight: bold; color: var(--orange); white-space: nowrap; font-size: 1rem; }
+    .desc { color: #666; font-size: 0.85rem; margin-top: 8px; line-height: 1.4; min-height: 48px; }
+    .add { width: 100%; margin-top: 15px; padding: 12px; border: none; border-radius: 10px; background: var(--orange); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+    .add:hover { background: #b84300; }
+
+    .cart { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100% - 24px)); background: var(--dark); color: white; padding: 12px 18px; border-radius: 16px; display: flex; align-items: center; gap: 15px; box-shadow: 0 15px 35px rgba(0,0,0,.35); z-index: 10; }
+    .cart-info { flex: 1; }
+    .cart-total { font-size: 1.2rem; font-weight: bold; color: #ffd08a; }
+    .open { border: none; background: var(--orange); color: white; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
+
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: flex-end; z-index: 20; }
+    .modal.show { display: flex; }
+    .box { background: white; width: min(720px, 100%); max-height: 90vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 24px; margin: 0 auto; }
+    .modalhead { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+    .close { border: none; background: #eee; border-radius: 50%; width: 34px; height: 34px; font-size: 20px; cursor: pointer; }
+
+    .row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; align-items: center; }
+    .qty { display: flex; align-items: center; gap: 8px; }
+    .qty button { width: 30px; height: 30px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .remove { border: none; background: none; color: #c0392b; cursor: pointer; font-weight: bold; }
+
+    .field { margin-top: 14px; }
+    .field label { display: block; font-weight: bold; font-size: .88rem; margin-bottom: 6px; color: var(--dark); }
+    .field input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; }
+    .field input:focus { border-color: var(--orange); }
+
+    .submit { width: 100%; margin-top: 20px; background: var(--orange); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+    .submit:disabled { background: #bbb; cursor: not-allowed; }
+
+    .toast { position: fixed; right: 20px; top: 20px; background: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,.2); display: none; z-index: 30; }
+    .toast.show { display: block; }
+    .toast.err { border-left: 5px solid #c0392b; }
+    .toast.ok { border-left: 5px solid var(--green); }
   </style>
 </head>
 <body>
-  <!-- GANTI DENGAN URL WEB APP APPS SCRIPT ANDA -->
-  <iframe 
-    src="https://script.google.com/macros/s/AKfycbzQ97fWp_h-EGMpSh29m1Q9yYV-MQPLvd5g2WGnb-bpJOZstB6_dNUAQ1nInHB1WOS1cQ/exec" 
-    allow="clipboard-write"
-    loading="lazy">
-  </iframe>
+
+<header>
+  <div>
+    <div class="brand-logo-wrap">
+      <img 
+        src="https://lh3.googleusercontent.com/d/1mHN2hE7oIVzyCJCI7WXhuJ6ooQa8eElK" 
+        alt="Logo NowpawoN" 
+        class="brand-logo-img"
+        onerror="this.style.display='none'"
+      >
+    </div>
+    <h1>NowpawoN</h1>
+    <p>Keajaiban rasa pawon zaman now</p>
+  </div>
+</header>
+
+<main class="container">
+  <div id="status" class="status">✅ Memuat data menu NowpawoN...</div>
+
+  <div class="toolbar">
+    <input id="search" class="search" placeholder="🔎 Cari menu makanan, minuman, dessert, satset..." oninput="render()">
+    <div id="cats" class="cats"></div>
+  </div>
+
+  <div id="menuArea"></div>
+</main>
+
+<div class="cart">
+  <div class="cart-info">
+    <small><span id="count">0</span> menu dipilih</small><br>
+    <span id="total" class="cart-total">Rp 0</span>
+  </div>
+  <button class="open" onclick="openCart()">🛒 Lihat Pesanan</button>
+</div>
+
+<!-- Modal Order -->
+<div id="modal" class="modal" onclick="if(event.target===this)closeCart()">
+  <div class="box">
+    <div class="modalhead">
+      <h2>Daftar Pesanan Anda</h2>
+      <button class="close" onclick="closeCart()">×</button>
+    </div>
+
+    <div id="cartItems"></div>
+
+    <div class="field">
+      <label>Nama Pemesan <span style="color:red">*</span></label>
+      <input id="nama" placeholder="Masukkan nama lengkap Anda" required>
+    </div>
+
+    <div class="field">
+      <label>Nomor WhatsApp (WA) <span style="color:red">*</span></label>
+      <input id="hp" type="tel" placeholder="Contoh: 08123456789 atau 628123456789" required>
+    </div>
+
+    <button id="submit" class="submit" onclick="sendOrder()">Kirim Pesanan Sekarang</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// Data awal default (langsung tampil seketika)
+let menus = [
+  { id: "M-1", name: "Mangut lele", description: "Lele asap yang dimasak dengan bumbu kuning, santan, pedas dan segar yang menggugah selera makan", price: 10000, category: "Makanan", image: "https://lh3.googleusercontent.com/d/19_O6Z3nywqw40Jy4Xpo77mT_XcQguEMd", available: true },
+  { id: "M-2", name: "Mie ayam jamur rica", description: "Mie dengan ayam rica-rica kukus dengan cita rasa pedas dengan aroma yang menggoda", price: 15000, category: "Makanan", image: "https://lh3.googleusercontent.com/d/1wc25ykJ0MQIX-xny0bqEYVmTNY5LdpVP", available: true },
+  { id: "M-3", name: "Zuppa soup", description: "Kuah yang creammy dan sayuran yang berwarna warni", price: 7000, category: "Dessert", image: "", available: true },
+  { id: "M-4", name: "RoTea (Rosella Tea)", description: "Es teh rosella dengan biji selasih dengan gula stevia 0 kalori serta aroma jeruk yang segar cocok diminum di cuaca panas", price: 5000, category: "Minuman", image: "https://lh3.googleusercontent.com/d/1QSsQWe5yuipwl1qDMd7zTz-ZKTEFwTN-", available: true },
+  { id: "M-5", name: "Es jegar (Jahe segar)", description: "Es jahe dengan cita rasa pedas dan asam cocok dengan es mendinginkan suasana panas", price: 5000, category: "Minuman", image: "https://lh3.googleusercontent.com/d/1qUJW_F5TF1aJjTvob3mvsh1RtF_6En3A", available: true },
+  { id: "M-6", name: "Salad buah", description: "Campuran buah naga, kelengkeng, mangga dan yougurt yang creammy", price: 10000, category: "Dessert", image: "https://lh3.googleusercontent.com/d/1XVFeLKjXnt4sHSFg5yqlCqWwwG3dQwMJ", available: true },
+  { id: "M-7", name: "Lele bumbu vacum", description: "Lele bumbu kuning cocok bagi kaum sat set tinggal goreng (3 pcs)", price: 10000, category: "Satset", image: "https://lh3.googleusercontent.com/d/1S2q0TbzeaD6yMnCbldgiGdKYZ6y3ZbDH", available: true }
+];
+
+let cart = {};
+let category = "Semua";
+
+function money(val) {
+  return "Rp " + Number(val || 0).toLocaleString("id-ID");
+}
+
+function esc(val) {
+  return String(val ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+}
+
+function show(msg, type = "ok") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast show " + type;
+  setTimeout(() => t.className = "toast", 4000);
+}
+
+function setStatus(msg, err = false) {
+  const s = document.getElementById("status");
+  s.textContent = msg; s.className = err ? "status error" : "status";
+}
+
+function initApp() {
+  buildCategories();
+  render();
+  setStatus("✅ Menampilkan 7 menu NowpawoN.");
+
+  if (typeof google !== "undefined" && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        if (Array.isArray(data) && data.length > 0) {
+          menus = data;
+          buildCategories();
+          render();
+          setStatus("✅ Menu terhubung langsung & diperbarui dari sheet 'menu' (" + data.length + " menu).");
+        }
+      })
+      .withFailureHandler(function(err) {
+        console.warn("Sinkronisasi sheet offline:", err);
+      })
+      .getMenuData();
+  }
+}
+
+function buildCategories() {
+  const uniqueCats = Array.from(new Set(menus.map(m => m.category).filter(Boolean)));
+  const categories = ["Semua", ...uniqueCats];
+  document.getElementById("cats").innerHTML = categories.map(cat => `
+    <button class="cat ${cat === category ? 'active' : ''}" onclick="selectCategory('${esc(cat)}')">
+      ${esc(cat)}
+    </button>
+  `).join("");
+}
+
+function selectCategory(cat) {
+  category = cat;
+  buildCategories();
+  render();
+}
+
+function render() {
+  const keyword = document.getElementById("search").value.toLowerCase().trim();
+
+  const filtered = menus.filter(menu => {
+    const text = (menu.name + " " + (menu.description || "") + " " + menu.category).toLowerCase();
+    const matchCat = category === "Semua" || menu.category.toLowerCase() === category.toLowerCase();
+    return matchCat && text.includes(keyword);
+  });
+
+  if (!filtered.length) {
+    document.getElementById("menuArea").innerHTML = '<div class="status">Tidak ada menu yang sesuai pencarian.</div>';
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(m => {
+    const cat = m.category || "Lainnya";
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(m);
+  });
+
+  document.getElementById("menuArea").innerHTML = Object.entries(groups).map(([catName, items]) => `
+    <section>
+      <h2 class="title">${esc(catName)}</h2>
+      <div class="grid">
+        ${items.map(createCard).join("")}
+      </div>
+    </section>
+  `).join("");
+}
+
+function createCard(menu) {
+  const fallback = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80";
+  const image = menu.image || fallback;
+
+  return `
+    <article class="card">
+      <div class="photo">
+        <img src="${esc(image)}" alt="${esc(menu.name)}" onerror="this.onerror=null;this.src='${fallback}'">
+        <span class="badge">${esc(menu.category)}</span>
+      </div>
+      <div class="info">
+        <div>
+          <div class="head">
+            <span class="name">${esc(menu.name)}</span>
+            <span class="price">${money(menu.price)}</span>
+          </div>
+          <p class="desc">${esc(menu.description || "Menu hidangan lezat pilihan NowpawoN.")}</p>
+        </div>
+        <button class="add" onclick="addToCart('${esc(menu.id)}')">＋ Tambah ke Pesanan</button>
+      </div>
+    </article>
+  `;
+}
+
+function addToCart(id) {
+  const menu = menus.find(item => item.id === id);
+  if (!menu) return;
+
+  if (!cart[id]) {
+    cart[id] = { ...menu, qty: 0 };
+  }
+  cart[id].qty++;
+  updateCart();
+  show(menu.name + " ditambahkan (" + cart[id].qty + "x).");
+}
+
+function updateCart() {
+  const items = Object.values(cart);
+  const count = items.reduce((sum, item) => sum + item.qty, 0);
+  const total = items.reduce((sum, item) => sum + (item.qty * Number(item.price || 0)), 0);
+
+  document.getElementById("count").textContent = count;
+  document.getElementById("total").textContent = money(total);
+}
+
+function openCart() {
+  if (Object.keys(cart).length === 0) {
+    show("Pilih menu terlebih dahulu.", "err");
+    return;
+  }
+  renderCart();
+  document.getElementById("modal").classList.add("show");
+}
+
+function closeCart() {
+  document.getElementById("modal").classList.remove("show");
+}
+
+function renderCart() {
+  const items = Object.values(cart);
+  document.getElementById("cartItems").innerHTML = items.map(item => `
+    <div class="row">
+      <div>
+        <b>${esc(item.name)}</b><br>
+        <small>${money(item.price)} × ${item.qty} = <b>${money(item.price * item.qty)}</b></small>
+      </div>
+      <div class="qty">
+        <button onclick="changeQty('${esc(item.id)}', -1)">−</button>
+        <span>${item.qty}</span>
+        <button onclick="changeQty('${esc(item.id)}', 1)">+</button>
+      </div>
+      <button class="remove" onclick="removeItem('${esc(item.id)}')">Hapus</button>
+    </div>
+  `).join("");
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id].qty += delta;
+  if (cart[id].qty <= 0) delete cart[id];
+  updateCart();
+  renderCart();
+  if (Object.keys(cart).length === 0) closeCart();
+}
+
+function removeItem(id) {
+  delete cart[id];
+  updateCart();
+  renderCart();
+  if (Object.keys(cart).length === 0) closeCart();
+}
+
+function sendOrder() {
+  const nama = document.getElementById("nama").value.trim();
+  const hp = document.getElementById("hp").value.trim();
+
+  if (!nama) {
+    show("Nama pemesan wajib diisi!", "err");
+    document.getElementById("nama").focus();
+    return;
+  }
+  if (!hp) {
+    show("Nomor WhatsApp (WA) wajib diisi!", "err");
+    document.getElementById("hp").focus();
+    return;
+  }
+  if (Object.keys(cart).length === 0) {
+    show("Belum ada menu yang dipilih.", "err");
+    return;
+  }
+
+  const btn = document.getElementById("submit");
+  btn.disabled = true;
+  btn.textContent = "⏳ Menyimpan & Membuat PDF...";
+
+  const payload = {
+    name: nama,
+    phone: hp,
+    items: Object.values(cart).map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }))
+  };
+
+  if (typeof google === "undefined" || !google.script || !google.script.run) {
+    setTimeout(function() {
+      btn.disabled = false;
+      btn.textContent = "Kirim Pesanan Sekarang";
+      show("Pesanan berhasil dicatat!");
+      cart = {}; updateCart(); closeCart();
+    }, 1000);
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      cart = {};
+      updateCart();
+      btn.disabled = false;
+      btn.textContent = "Kirim Pesanan Sekarang";
+
+      var pdfButton = res.pdfUrl ? `
+        <a href="${res.pdfUrl}" target="_blank" style="display: inline-block; background: #d35400; color: white; padding: 12px 24px; border-radius: 10px; font-weight: bold; text-decoration: none; margin: 14px 0;">
+          📥 Unduh Nota Pesanan PDF
+        </a>` : '';
+
+      document.querySelector(".box").innerHTML = `
+        <div style="text-align: center; padding: 20px 10px;">
+          <h2 style="color: #27ae60; margin-bottom: 8px;">🎉 Pesanan Berhasil!</h2>
+          <p style="color: #555; margin-bottom: 12px;">
+            No. Order: <strong>${res.orderId}</strong><br>
+            Data pesanan telah dicatat di sheet <strong>order</strong>.
+          </p>
+          ${pdfButton}
+          <br>
+          <button onclick="location.reload()" style="background: none; border: 1px solid #ccc; padding: 8px 18px; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+            Selesai / Pesan Lagi
+          </button>
+        </div>
+      `;
+      show("Pesanan dan PDF berhasil dibuat!");
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.textContent = "Kirim Pesanan Sekarang";
+      show(err.message || String(err), "err");
+    })
+    .submitOrder(payload);
+}
+
+window.addEventListener("DOMContentLoaded", initApp);
+</script>
 </body>
 </html>
